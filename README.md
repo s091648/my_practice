@@ -4,8 +4,8 @@
 
 > 📝 本文檔由 Cursor AI 協助生成，基於專案的實際架構和程式碼進行分析後產生。
 
-<details>
-<summary><h2>專案架構</h2></summary>
+## 專案架構
+<details open>
 
 專案採用清晰架構（Clean Architecture）設計，目錄結構如下：
 
@@ -26,30 +26,33 @@ tests/              # 測試目錄
 ├── test_user_use_case.py # Use Case 層測試
 └── __init__.py           # Python 包標識檔
 ```
+
 </details>
 
-<details>
-<summary><h2>功能特點</h2></summary>
+## 功能特點
+<details open>
 
 - 使用者管理 CRUD 操作
 - CSV 檔案資料存儲
 - 使用者資料驗證
 - 批量使用者導入
 - 使用者年齡統計分析
+
 </details>
 
-<details>
-<summary><h2>API 端點</h2></summary>
+## API 端點
+<details open>
 
 - `POST /create_user` - 創建新使用者
 - `DELETE /delete_user` - 刪除使用者
 - `GET /get_added_user` - 獲取已添加的使用者列表
 - `POST /add_multiple_users_from_csv` - 從 CSV 檔案批量導入使用者
 - `GET /calc_average_age_of_user_grouped_by_first_char_of_name` - 計算按名字首字母分組的平均年齡
+
 </details>
 
-<details>
-<summary><h2>安裝與設置</h2></summary>
+## 安裝與設置
+<details open>
 
 1. 建立虛擬環境：
 ```bash
@@ -68,18 +71,20 @@ pip install -r requirements.txt
 ```bash
 uvicorn app.main:app --reload
 ```
+
 </details>
 
-<details>
-<summary><h2>API 文檔</h2></summary>
+## API 文檔
+<details open>
 
 啟動應用後，可以通過以下地址訪問 Swagger UI 文檔：
 - http://localhost:8000/docs
 - http://localhost:8000/redoc
+
 </details>
 
-<details>
-<summary><h2>資料格式</h2></summary>
+## 資料格式
+<details open>
 
 ### 使用者模型
 
@@ -95,10 +100,11 @@ uvicorn app.main:app --reload
 CSV 檔案必須包含以下欄位：
 - `Name`：使用者名稱
 - `Age`：使用者年齡
+
 </details>
 
-<details>
-<summary><h2>資料驗證規則</h2></summary>
+## 資料驗證規則
+<details open>
 
 - 使用者名稱（Name）：
   - 不能為空
@@ -106,10 +112,11 @@ CSV 檔案必須包含以下欄位：
 - 使用者年齡（Age）：
   - 必須為非負整數
   - 必須提供
+
 </details>
 
-<details>
-<summary><h2>開發架構</h2></summary>
+## 開發架構
+<details open>
 
 專案採用清晰架構（Clean Architecture）設計原則：
 
@@ -132,10 +139,11 @@ CSV 檔案必須包含以下欄位：
 5. **API Layer**：
    - 處理 HTTP 請求
    - 提供 RESTful API 端點
+
 </details>
 
-<details>
-<summary><h2>錯誤處理</h2></summary>
+## 錯誤處理
+<details open>
 
 系統採用統一的錯誤處理機制，所有異常都繼承自 `AppBaseException`。錯誤響應採用標準化的 JSON 格式：
 
@@ -203,19 +211,21 @@ CSV 檔案必須包含以下欄位：
   - 狀態碼：400
   - 訊息：動態生成（例如："Missing required columns"）
   - 情境：當 CSV 檔案格式或內容不符合要求時
+
 </details>
 
-<details>
-<summary><h2>技術堆疊</h2></summary>
+## 技術堆疊
+<details open>
 
 - FastAPI：現代、快速的 Web 框架
 - Pydantic：資料驗證和序列化
 - Pandas：CSV 資料處理
 - Cursor AI：文檔生成和程式碼分析
+
 </details>
 
-<details>
-<summary><h2>Docker 部署</h2></summary>
+## Docker 部署
+<details open>
 
 本專案提供 Docker 支援，可以輕鬆地在容器環境中運行應用程式。
 
@@ -259,19 +269,21 @@ docker run -p 8000:8000 user-management
    - 使用官方 Python 映像檔
    - 避免安裝不必要的套件
    - 使用 `--no-cache-dir` 減少映像檔大小
+
 </details>
 
-<details>
-<summary><h2>開發工具</h2></summary>
+## 開發工具
+<details open>
 
 - Cursor IDE：整合 AI 輔助開發功能
 - Cursor AI：協助生成文檔和程式碼分析
 - Git：版本控制
 - Python 3.12+：程式語言環境
+
 </details>
 
-<details>
-<summary><h2>測試</h2></summary>
+## 測試
+<details open>
 
 專案使用 pytest 進行測試，並使用 pytest-cov 生成覆蓋率報告。
 
@@ -309,22 +321,23 @@ docker run -p 8000:8000 user-management
 2. 沒有未測試的功能點
 3. 測試案例完整且全面
 
-### 測試架構特點
+### 執行測試
 
-1. **完整的測試層級**：
-   - 單元測試：確保各個元件的獨立功能
-   - 整合測試：驗證元件間的互動
-   - API 測試：確保端點行為符合預期
+```bash
+# 執行所有測試
+pytest
 
-2. **全面的測試範圍**：
-   - 正常流程測試
-   - 邊界條件測試
-   - 錯誤處理測試
-   - 資料驗證測試
+# 執行測試並生成覆蓋率報告
+pytest --cov=app --cov-report=html tests/
+
+# 執行特定測試檔案
+pytest tests/test_user_repository.py -v
+
+# 執行並顯示詳細測試資訊
+pytest -v
+```
 
 ### 測試架構
-
-測試遵循清晰架構的原則，分為以下幾個主要部分：
 
 1. **基礎設施層測試**：
    - `test_csv_parser.py`：測試 CSV 檔案解析邏輯
@@ -354,10 +367,12 @@ docker run -p 8000:8000 user-management
 4. **資料驗證**：
    - 測試資料格式驗證
    - 確保資料完整性和正確性
+
 </details>
 
-<details>
-<summary><h2>致謝</h2></summary>
+## 致謝
+<details open>
 
 特別感謝 Cursor AI 協助生成本文檔，透過對專案結構和程式碼的智能分析，提供了清晰且結構化的文檔內容。
+
 </details>
