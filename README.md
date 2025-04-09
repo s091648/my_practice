@@ -16,6 +16,14 @@ app/
 ├── infrastructure/ # 基礎設施實作（如 CSV 存儲）
 ├── interfaces/     # 介面定義
 └── use_cases/      # 使用案例實作
+tests/              # 測試目錄
+├── conftest.py            # Pytest 共用測試夾具
+├── test_csv_parser.py     # CSV 解析器測試
+├── test_main.py          # 主應用程式測試
+├── test_user_repository.py# Repository 層測試
+├── test_user_router.py   # API 層測試
+├── test_user_use_case.py # Use Case 層測試
+└── __init__.py           # Python 包標識檔
 ```
 
 ## 功能特點
@@ -112,59 +120,106 @@ CSV 檔案必須包含以下欄位：
 
 ## 錯誤處理
 
-系統定義了多種錯誤類型，所有錯誤都繼承自 `AppBaseException`。每個錯誤都會返回標準化的錯誤響應：
+系統採用統一的錯誤處理機制，所有異常都繼承自 `AppBaseException`。錯誤響應採用標準化的 JSON 格式：
 
 ```json
 {
     "detail": "ErrorType: 錯誤訊息",
-    "status_code": 400,
+    "status_code": 422,
     "exception_type": "ErrorType"
 }
 ```
 
-### 資料驗證錯誤 (HTTP 400)
-- `EmptyUserNameError`
-  - 狀態碼：400
-  - 訊息："User name cannot be empty."
-  - 情境：當使用者名稱為空字串時
+### 資料驗證異常 (HTTP 422)
+1. **Pydantic 驗證錯誤**：
+   - 狀態碼：422
+   - 情境：當請求資料不符合模型定義時
+   - 範例：
+     ```json
+     {
+       "detail": [
+         {
+           "type": "int_parsing",
+           "loc": ["body", "Age"],
+           "msg": "Input should be a valid integer",
+           "input": "invalid"
+         }
+       ]
+     }
+     ```
 
-- `NegativeUserAgeError`
-  - 狀態碼：400
-  - 訊息："User age cannot be negative."
-  - 情境：當使用者年齡為負數時
+2. **自定義驗證錯誤**：
+   - `EmptyUserNameError`
+     - 狀態碼：422
+     - 訊息："User name cannot be empty."
+     - 情境：當使用者名稱為空字串時
 
-### 資源不存在錯誤 (HTTP 404)
+   - `NegativeUserAgeError`
+     - 狀態碼：422
+     - 訊息："User age cannot be negative."
+     - 情境：當使用者年齡為負數時
+
+### 核心異常
+- `AppBaseException`
+  - 狀態碼：500
+  - 基礎異常類別
+  - 用於處理未分類的系統錯誤
+
+### 業務邏輯異常 (HTTP 404)
 - `UserNotFoundError`
   - 狀態碼：404
   - 訊息："User not found."
-  - 情境：當要刪除的使用者不存在時
+  - 情境：當要操作的使用者不存在時
 
-### 資料處理錯誤 (HTTP 400)
+### 資料處理異常 (HTTP 400)
 - `DataframeKeyException`
   - 狀態碼：400
-  - 訊息："Field {field} not found"
+  - 訊息：動態生成（例如："Field {field} not found"）
   - 情境：當在 DataFrame 操作時找不到指定的欄位
 
 - `GroupbyKeyException`
   - 狀態碼：400
-  - 訊息："Field {field} not found in GroupBy"
+  - 訊息：動態生成（例如："Field {field} not found in GroupBy"）
   - 情境：當在分組操作時找不到指定的欄位
 
 - `CSVParserException`
   - 狀態碼：400
-  - 訊息："Missing required columns: {missing}"
-  - 情境：當 CSV 檔案缺少必要的欄位時
+  - 訊息：動態生成（例如："Missing required columns"）
+  - 情境：當 CSV 檔案格式或內容不符合要求時
 
-### 系統錯誤 (HTTP 500)
-- `AppBaseException`
-  - 狀態碼：500
-  - 訊息："Internal server error"
-  - 情境：未被捕捉的系統內部錯誤
+### 錯誤處理機制
 
-所有錯誤都會被全局錯誤處理器捕捉，並返回標準化的 JSON 響應。錯誤響應包含：
-- HTTP 狀態碼
-- 錯誤類型
-- 詳細的錯誤訊息
+1. **全局異常處理**：
+   - 在 `app/main.py` 中註冊全局異常處理器
+   - 自動捕獲並格式化所有 `AppBaseException` 異常
+   - FastAPI 自動處理 Pydantic 驗證錯誤
+   - 確保一致的錯誤響應格式
+
+2. **異常層級**：
+   - 核心異常：`AppBaseException`
+   - 驗證異常：`EmptyUserNameError`, `NegativeUserAgeError`
+   - 業務邏輯異常：`UserNotFoundError`
+   - 資料處理異常：`DataframeKeyException`, `GroupbyKeyException`
+   - 服務層異常：`CSVParserException`
+
+3. **錯誤響應格式化**：
+   - 所有自定義異常都實現 `to_response()` 方法
+   - Pydantic 驗證錯誤使用 FastAPI 的標準格式
+   - 包含異常類型和詳細訊息
+
+4. **使用方式**：
+   ```python
+   # 自定義驗證異常
+   raise EmptyUserNameError()
+   
+   # Pydantic 模型驗證
+   class User(BaseModel):
+       Name: str
+       Age: int = Field(ge=0)  # 確保年齡非負
+   
+   # 自定義訊息的異常
+   raise CSVParserException("Missing required columns: Name, Age")
+   ```
 
 ## 技術堆疊
 
@@ -183,3 +238,85 @@ CSV 檔案必須包含以下欄位：
 ## 致謝
 
 特別感謝 Cursor AI 協助生成本文檔，透過對專案結構和程式碼的智能分析，提供了清晰且結構化的文檔內容。
+
+## 測試
+
+專案使用 pytest 進行測試，並使用 pytest-cov 生成覆蓋率報告。
+
+### 執行測試
+
+```bash
+# 執行所有測試
+pytest
+
+# 執行測試並生成覆蓋率報告
+pytest --cov=app --cov-report=html tests/
+
+# 執行特定測試檔案
+pytest tests/test_user_repository.py -v
+
+# 執行並顯示詳細測試資訊
+pytest -v
+```
+
+### 測試架構
+
+測試遵循清晰架構的原則，分為以下幾個主要部分：
+
+1. **基礎設施層測試**：
+   - `test_csv_parser.py`：測試 CSV 檔案解析邏輯
+     * 驗證 CSV 檔案格式檢查
+     * 測試必要欄位驗證
+     * 測試資料轉換功能
+
+2. **Repository 層測試** (`test_user_repository.py`)：
+   - 測試數據存取邏輯
+   - 驗證 CSV 文件操作
+   - 確保數據完整性
+   - 測試分組和統計功能
+
+3. **Use Case 層測試** (`test_user_use_case.py`)：
+   - 測試業務邏輯
+   - 驗證錯誤處理
+   - 使用 Mock 物件模擬依賴
+   - 測試使用者管理相關操作
+
+4. **API 層測試**：
+   - `test_user_router.py`：測試 API 端點
+     * 驗證請求/響應格式
+     * 確保錯誤處理符合 API 規範
+     * 測試各種 HTTP 方法
+   - `test_main.py`：測試應用程式配置
+     * 驗證全局異常處理
+     * 測試應用程式啟動配置
+
+5. **測試配置** (`conftest.py`)：
+   - 定義共用的測試夾具（Fixtures）
+   - 提供測試數據和模擬物件
+   - 確保測試環境的一致性
+
+### 覆蓋率報告
+
+覆蓋率報告配置在 `.coveragerc` 文件中，主要特點：
+- 排除測試文件和 `__init__.py`
+- 包含分支覆蓋率測試
+- HTML 格式報告位於 `.coverage_report/html` 目錄
+- 提供詳細的覆蓋率統計和未覆蓋程式碼分析
+
+### 測試最佳實踐
+
+1. **分層測試**：
+   - 每個架構層都有對應的測試
+   - 確保各層級的獨立性和完整性
+
+2. **測試隔離**：
+   - 使用 fixtures 確保測試獨立性
+   - Mock 外部依賴避免副作用
+
+3. **錯誤處理測試**：
+   - 驗證各種錯誤情況
+   - 確保錯誤回應符合規範
+
+4. **資料驗證**：
+   - 測試資料格式驗證
+   - 確保資料完整性和正確性
