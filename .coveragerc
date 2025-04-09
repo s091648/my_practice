@@ -1,9 +1,11 @@
 [run]
 source = app
+branch = True
 omit = 
     */site-packages/*
     */tests/*
     */__init__.py
+    */migrations/*
 
 [report]
 exclude_lines =
@@ -13,6 +15,11 @@ exclude_lines =
     if __name__ == .__main__.:
     pass
     raise ImportError
+    def __str__
+    @abstractmethod
+show_missing = True
+skip_covered = True
 
 [html]
-directory = .coverage_report/html 
+directory = .coverage_report/html
+title = Coverage Report for FastAPI Application 

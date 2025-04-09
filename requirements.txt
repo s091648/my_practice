@@ -1,9 +1,10 @@
-uvicorn==0.27.1
-fastapi==0.110.0
+uvicorn
+fastapi
 pydantic
 pydantic-settings
-pandas==2.2.1
-pytest==8.0.0
+pandas
+pytest
 python-multipart
-pytest-cov==4.1.0
-httpx==0.27.0
+pytest-cov
+httpx
+coverage
