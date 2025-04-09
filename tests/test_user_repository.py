@@ -2,7 +2,6 @@ import pytest
 import pandas as pd
 from app.domain.user.models.user import User
 from app.domain.user.models.new_user import NewUser
-from app.use_cases.user.exceptions import UserNotFoundError
 from app.infrastructure.repositories.exceptions import DataframeKeyException, GroupbyKeyException
 from app.infrastructure.repositories.user_repository_csv import UserCSVRepository
 import tempfile

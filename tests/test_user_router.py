@@ -1,6 +1,4 @@
-import pytest
 import io
-from app.domain.user import NewUser, User
 
 def test_create_user(client):
     # 準備測試數據

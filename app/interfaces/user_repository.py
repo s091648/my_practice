@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List, Tuple
+from typing import List
 from app.domain.user import User, NewUser
 from pandas.core.groupby.generic import DataFrameGroupBy
 import pandas as pd

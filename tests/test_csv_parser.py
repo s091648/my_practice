@@ -6,7 +6,6 @@ from app.infrastructure.services.csv_user_parser import CsvUserParserService
 from app.infrastructure.services.exceptions import CSVParserException
 from app.domain.user.models.user import User
 from app.domain.user.models.new_user import NewUser
-from app.domain.user.fields import UserField
 
 @pytest.fixture
 def temp_valid_csv():

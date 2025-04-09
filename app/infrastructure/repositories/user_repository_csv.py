@@ -2,7 +2,7 @@ import pandas as pd
 from pandas.core.groupby.generic import DataFrameGroupBy
 from app.interfaces.user_repository import IUserRepository
 from app.domain.user import User, NewUser, UserField
-from typing import List, Union, Tuple, Optional
+from typing import List, Union
 from .exceptions import DataframeKeyException, GroupbyKeyException
 
 class UserCSVRepository(IUserRepository):
