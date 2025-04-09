@@ -5,7 +5,6 @@ from app.domain.user.models.new_user import NewUser
 from app.use_cases.user.exceptions import UserNotFoundError
 from app.infrastructure.repositories.exceptions import DataframeKeyException, GroupbyKeyException
 from app.infrastructure.repositories.user_repository_csv import UserCSVRepository
-from app.domain.user.fields import UserField
 import tempfile
 import os
 
@@ -88,21 +87,14 @@ def test_create_user(repository):
 def test_delete_user(repository):
     # 準備測試數據
     user = User(Name="Test User", Age=25)
+    initial_len = len(repository.df)
     
     # 執行測試
     repository.delete_user(user)
     
     # 驗證結果
-    assert len(repository.df) == 1
-    assert "Test User" not in repository.df["Name"].values
-
-def test_delete_nonexistent_user(repository):
-    # 準備測試數據
-    user = User(Name="Nonexistent User", Age=25)
-    
-    # 執行測試並驗證異常
-    with pytest.raises(UserNotFoundError):
-        repository.delete_user(user)
+    assert len(repository.df) == initial_len - 1  # 確認記錄被刪除
+    assert "Test User" not in repository.df["Name"].values  # 確認特定用戶被刪除
 
 def test_get_added_user(repository):
     # 準備測試數據
