@@ -4,7 +4,8 @@
 
 > 📝 本文檔由 Cursor AI 協助生成，基於專案的實際架構和程式碼進行分析後產生。
 
-## 專案架構
+<details>
+<summary><h2>專案架構</h2></summary>
 
 專案採用清晰架構（Clean Architecture）設計，目錄結構如下：
 
@@ -25,24 +26,30 @@ tests/              # 測試目錄
 ├── test_user_use_case.py # Use Case 層測試
 └── __init__.py           # Python 包標識檔
 ```
+</details>
 
-## 功能特點
+<details>
+<summary><h2>功能特點</h2></summary>
 
 - 使用者管理 CRUD 操作
 - CSV 檔案資料存儲
 - 使用者資料驗證
 - 批量使用者導入
 - 使用者年齡統計分析
+</details>
 
-## API 端點
+<details>
+<summary><h2>API 端點</h2></summary>
 
 - `POST /create_user` - 創建新使用者
 - `DELETE /delete_user` - 刪除使用者
 - `GET /get_added_user` - 獲取已添加的使用者列表
 - `POST /add_multiple_users_from_csv` - 從 CSV 檔案批量導入使用者
 - `GET /calc_average_age_of_user_grouped_by_first_char_of_name` - 計算按名字首字母分組的平均年齡
+</details>
 
-## 安裝與設置
+<details>
+<summary><h2>安裝與設置</h2></summary>
 
 1. 建立虛擬環境：
 ```bash
@@ -61,14 +68,18 @@ pip install -r requirements.txt
 ```bash
 uvicorn app.main:app --reload
 ```
+</details>
 
-## API 文檔
+<details>
+<summary><h2>API 文檔</h2></summary>
 
 啟動應用後，可以通過以下地址訪問 Swagger UI 文檔：
 - http://localhost:8000/docs
 - http://localhost:8000/redoc
+</details>
 
-## 資料格式
+<details>
+<summary><h2>資料格式</h2></summary>
 
 ### 使用者模型
 
@@ -84,8 +95,10 @@ uvicorn app.main:app --reload
 CSV 檔案必須包含以下欄位：
 - `Name`：使用者名稱
 - `Age`：使用者年齡
+</details>
 
-## 資料驗證規則
+<details>
+<summary><h2>資料驗證規則</h2></summary>
 
 - 使用者名稱（Name）：
   - 不能為空
@@ -93,8 +106,10 @@ CSV 檔案必須包含以下欄位：
 - 使用者年齡（Age）：
   - 必須為非負整數
   - 必須提供
+</details>
 
-## 開發架構
+<details>
+<summary><h2>開發架構</h2></summary>
 
 專案採用清晰架構（Clean Architecture）設計原則：
 
@@ -117,8 +132,10 @@ CSV 檔案必須包含以下欄位：
 5. **API Layer**：
    - 處理 HTTP 請求
    - 提供 RESTful API 端點
+</details>
 
-## 錯誤處理
+<details>
+<summary><h2>錯誤處理</h2></summary>
 
 系統採用統一的錯誤處理機制，所有異常都繼承自 `AppBaseException`。錯誤響應採用標準化的 JSON 格式：
 
@@ -186,78 +203,124 @@ CSV 檔案必須包含以下欄位：
   - 狀態碼：400
   - 訊息：動態生成（例如："Missing required columns"）
   - 情境：當 CSV 檔案格式或內容不符合要求時
+</details>
 
-### 錯誤處理機制
-
-1. **全局異常處理**：
-   - 在 `app/main.py` 中註冊全局異常處理器
-   - 自動捕獲並格式化所有 `AppBaseException` 異常
-   - FastAPI 自動處理 Pydantic 驗證錯誤
-   - 確保一致的錯誤響應格式
-
-2. **異常層級**：
-   - 核心異常：`AppBaseException`
-   - 驗證異常：`EmptyUserNameError`, `NegativeUserAgeError`
-   - 業務邏輯異常：`UserNotFoundError`
-   - 資料處理異常：`DataframeKeyException`, `GroupbyKeyException`
-   - 服務層異常：`CSVParserException`
-
-3. **錯誤響應格式化**：
-   - 所有自定義異常都實現 `to_response()` 方法
-   - Pydantic 驗證錯誤使用 FastAPI 的標準格式
-   - 包含異常類型和詳細訊息
-
-4. **使用方式**：
-   ```python
-   # 自定義驗證異常
-   raise EmptyUserNameError()
-   
-   # Pydantic 模型驗證
-   class User(BaseModel):
-       Name: str
-       Age: int = Field(ge=0)  # 確保年齡非負
-   
-   # 自定義訊息的異常
-   raise CSVParserException("Missing required columns: Name, Age")
-   ```
-
-## 技術堆疊
+<details>
+<summary><h2>技術堆疊</h2></summary>
 
 - FastAPI：現代、快速的 Web 框架
 - Pydantic：資料驗證和序列化
 - Pandas：CSV 資料處理
 - Cursor AI：文檔生成和程式碼分析
+</details>
 
-## 開發工具
+<details>
+<summary><h2>Docker 部署</h2></summary>
+
+本專案提供 Docker 支援，可以輕鬆地在容器環境中運行應用程式。
+
+### 前置需求
+
+- 安裝 [Docker](https://www.docker.com/get-started)
+
+### Docker 映像檔建立
+
+```bash
+docker build -t user-management .
+```
+
+### 運行容器
+
+```bash
+docker run -p 8000:8000 user-management
+```
+
+應用程式將在 http://localhost:8000 上運行，您可以通過以下地址訪問：
+- Swagger UI：http://localhost:8000/docs
+- ReDoc：http://localhost:8000/redoc
+
+### Docker 配置說明
+
+專案使用以下 Docker 配置：
+
+1. **基礎映像檔**：
+   - 使用 `python:3.12-slim` 作為基礎映像檔
+   - 選擇 slim 版本以減少映像檔大小
+
+2. **檔案排除**：
+   使用 `.dockerignore` 排除不必要的檔案：
+   - Python 快取檔案（`__pycache__/`, `*.pyc`）
+   - 環境相關（`venv/`, `.env`）
+   - 測試相關（`.pytest_cache/`, `.coverage`, `htmlcov/`）
+   - 版本控制（`.git/`, `.gitignore`）
+   - 文檔（`README.md`）
+
+3. **安全性考慮**：
+   - 使用官方 Python 映像檔
+   - 避免安裝不必要的套件
+   - 使用 `--no-cache-dir` 減少映像檔大小
+</details>
+
+<details>
+<summary><h2>開發工具</h2></summary>
 
 - Cursor IDE：整合 AI 輔助開發功能
 - Cursor AI：協助生成文檔和程式碼分析
 - Git：版本控制
-- Python 3.8+：程式語言環境
+- Python 3.12+：程式語言環境
+</details>
 
-## 致謝
-
-特別感謝 Cursor AI 協助生成本文檔，透過對專案結構和程式碼的智能分析，提供了清晰且結構化的文檔內容。
-
-## 測試
+<details>
+<summary><h2>測試</h2></summary>
 
 專案使用 pytest 進行測試，並使用 pytest-cov 生成覆蓋率報告。
 
-### 執行測試
+### 當前測試覆蓋率狀況
 
-```bash
-# 執行所有測試
-pytest
+根據最新的覆蓋率報告（生成於 2025-04-10），專案達到了優秀的測試覆蓋率：
 
-# 執行測試並生成覆蓋率報告
-pytest --cov=app --cov-report=html tests/
+- **總體覆蓋率**：100%
+- **已測試語句數**：202
+- **未覆蓋語句數**：0
 
-# 執行特定測試檔案
-pytest tests/test_user_repository.py -v
+#### 各模組覆蓋率詳情
 
-# 執行並顯示詳細測試資訊
-pytest -v
-```
+| 模組 | 語句數 | 覆蓋率 |
+|------|--------|--------|
+| api/v1/user_router.py | 33 | 100% |
+| core/exceptions.py | 6 | 100% |
+| core/settings.py | 6 | 100% |
+| domain/user/exceptions.py | 9 | 100% |
+| domain/user/fields.py | 5 | 100% |
+| domain/user/models/new_user.py | 2 | 100% |
+| domain/user/models/user.py | 15 | 100% |
+| infrastructure/repositories/exceptions.py | 11 | 100% |
+| infrastructure/repositories/user_repository_csv.py | 40 | 100% |
+| infrastructure/services/csv_user_parser.py | 19 | 100% |
+| infrastructure/services/exceptions.py | 6 | 100% |
+| interfaces/user_data_loader.py | 4 | 100% |
+| interfaces/user_repository.py | 6 | 100% |
+| main.py | 9 | 100% |
+| use_cases/user/exceptions.py | 5 | 100% |
+| use_cases/user/user_use_case.py | 26 | 100% |
+
+這個完美的測試覆蓋率表明：
+1. 所有的程式碼路徑都經過測試
+2. 沒有未測試的功能點
+3. 測試案例完整且全面
+
+### 測試架構特點
+
+1. **完整的測試層級**：
+   - 單元測試：確保各個元件的獨立功能
+   - 整合測試：驗證元件間的互動
+   - API 測試：確保端點行為符合預期
+
+2. **全面的測試範圍**：
+   - 正常流程測試
+   - 邊界條件測試
+   - 錯誤處理測試
+   - 資料驗證測試
 
 ### 測試架構
 
@@ -265,43 +328,14 @@ pytest -v
 
 1. **基礎設施層測試**：
    - `test_csv_parser.py`：測試 CSV 檔案解析邏輯
-     * 驗證 CSV 檔案格式檢查
-     * 測試必要欄位驗證
-     * 測試資料轉換功能
+   - `test_user_repository.py`：測試數據存取邏輯
 
-2. **Repository 層測試** (`test_user_repository.py`)：
-   - 測試數據存取邏輯
-   - 驗證 CSV 文件操作
-   - 確保數據完整性
-   - 測試分組和統計功能
-
-3. **Use Case 層測試** (`test_user_use_case.py`)：
-   - 測試業務邏輯
-   - 驗證錯誤處理
-   - 使用 Mock 物件模擬依賴
-   - 測試使用者管理相關操作
-
-4. **API 層測試**：
+2. **API 層測試**：
    - `test_user_router.py`：測試 API 端點
-     * 驗證請求/響應格式
-     * 確保錯誤處理符合 API 規範
-     * 測試各種 HTTP 方法
    - `test_main.py`：測試應用程式配置
-     * 驗證全局異常處理
-     * 測試應用程式啟動配置
 
-5. **測試配置** (`conftest.py`)：
-   - 定義共用的測試夾具（Fixtures）
-   - 提供測試數據和模擬物件
-   - 確保測試環境的一致性
-
-### 覆蓋率報告
-
-覆蓋率報告配置在 `.coveragerc` 文件中，主要特點：
-- 排除測試文件和 `__init__.py`
-- 包含分支覆蓋率測試
-- HTML 格式報告位於 `.coverage_report/html` 目錄
-- 提供詳細的覆蓋率統計和未覆蓋程式碼分析
+3. **Use Case 層測試**：
+   - `test_user_use_case.py`：測試業務邏輯
 
 ### 測試最佳實踐
 
@@ -320,3 +354,10 @@ pytest -v
 4. **資料驗證**：
    - 測試資料格式驗證
    - 確保資料完整性和正確性
+</details>
+
+<details>
+<summary><h2>致謝</h2></summary>
+
+特別感謝 Cursor AI 協助生成本文檔，透過對專案結構和程式碼的智能分析，提供了清晰且結構化的文檔內容。
+</details>

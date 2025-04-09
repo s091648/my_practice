@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# 環境
+venv/
+.env
+
+# 測試
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 其他
+.git/
+.gitignore
+README.md 

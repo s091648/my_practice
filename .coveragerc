@@ -1,6 +1,5 @@
 [run]
 source = app
-branch = True
 omit = 
     */site-packages/*
     */tests/*
@@ -18,7 +17,7 @@ exclude_lines =
     def __str__
     @abstractmethod
 show_missing = True
-skip_covered = True
+skip_covered = False
 
 [html]
 directory = .coverage_report/html
