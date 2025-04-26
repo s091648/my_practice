@@ -34,6 +34,9 @@ class UserCSVRepository(IUserRepository):
         added_users = self.df[self.df['is_new']]
         return [NewUser(**row) for _, row in added_users.iterrows()]
     
+    def get_all_users(self) -> List[User]:
+        return [User(**row) for _, row in self.df.iterrows()]
+    
     def get_grouped_users_by(self, field: str) -> DataFrameGroupBy:
         if field not in self.df.columns:
             raise DataframeKeyException(f"Field {field} not found")

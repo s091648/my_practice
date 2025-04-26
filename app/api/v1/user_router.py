@@ -30,6 +30,10 @@ def get_added_user():
     res = [d.model_dump() for d in added_user_list]
     return res
 
+@router.get("/get_all_users")
+def get_all_users():
+    return use_case.get_all_users()
+
 @router.post("/add_multiple_users_from_csv")
 def add_multiple_users_from_csv(file: UploadFile = File(...)):
     temp_file_path = f"{settings.csv_upload_path}/{file.filename}"

@@ -62,6 +62,15 @@ class IUserRepository(ABC):
         pass
 
     @abstractmethod
+    def get_all_users(self) -> List[User]:
+        """Get all users from the dataframe as User instances.
+        
+        Returns:
+            List of all users
+        """
+        pass
+
+    @abstractmethod
     def get_grouped_users_by(self, field: str) -> DataFrameGroupBy:
         """Get all users from the dataframe as NewUser instances.
         

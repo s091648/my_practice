@@ -64,6 +64,14 @@ class UserUseCase:
         """
         return self.repo.get_added_user()
     
+    def get_all_users(self) -> List[User]:
+        """Get all users.
+        
+        Returns:
+            List of all users
+        """
+        return self.repo.get_all_users()
+    
     def init_users(self, source: str) -> List[User]:
         """Initialize users in the repository.
         
