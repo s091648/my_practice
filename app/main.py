@@ -1,10 +1,9 @@
-from fastapi import FastAPI, Request
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from app.core.exceptions import AppBaseException
-from app.api.v1 import user_router
+from app.di.bootstrap import setup_app
 
-app = FastAPI()
-app.include_router(user_router.router)
+app = setup_app()
 
 @app.exception_handler(AppBaseException)
 async def app_exception_handler(request: Request, exc: AppBaseException):

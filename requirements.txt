@@ -7,3 +7,5 @@ pytest
 python-multipart
 pytest-cov
 httpx
+openai
+python-dotenv
