@@ -14,6 +14,11 @@ class UserCommandOperations(ICommandOperations):
                 required_fields=["name", "age"]
             ),
             CommandOperation(
+                name="delete_user_by_name",
+                description="僅透過用戶名稱刪除用戶",
+                required_fields=["name"]
+            ),
+            CommandOperation(
                 name="get_all_users",
                 description="獲取所有用戶",
                 required_fields=[]

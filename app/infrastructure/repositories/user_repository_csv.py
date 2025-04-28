@@ -29,13 +29,16 @@ class UserCSVRepository(IUserRepository):
     
     def delete_user(self, user: User) -> None:
         self.df = self.df.drop(self._query_user(user).index)
+
+    def delete_user_by_name(self, name: str) -> None:
+        self.df = self.df[self.df['Name'] != name]
     
     def get_added_user(self) -> List[NewUser]:
         added_users = self.df[self.df['is_new']]
         return [NewUser(**row) for _, row in added_users.iterrows()]
     
     def get_all_users(self) -> List[User]:
-        return [User(**row) for _, row in self.df.iterrows()]
+        return [NewUser(**row) if row['is_new'] else User(**row) for _, row in self.df.iterrows()]
     
     def get_grouped_users_by(self, field: str) -> DataFrameGroupBy:
         if field not in self.df.columns:

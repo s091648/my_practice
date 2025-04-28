@@ -28,7 +28,7 @@ def get_added_user(use_case: UserUseCase = Depends(get_user_use_case)):
 @router.get("/get_all_users")
 def get_all_users(use_case: UserUseCase = Depends(get_user_use_case)):
     all_users = use_case.get_all_users()
-    res = [d.model_dump() for d in all_users]
+    res = [{'is_new': isinstance(d, NewUser), **d.model_dump()} for d in all_users]
     return res
 
 @router.post("/add_multiple_users_from_csv")
@@ -40,6 +40,7 @@ def add_multiple_users_from_csv(
     with open(temp_file_path, "wb") as f:
         f.write(file.file.read())
     users = use_case.load_users_from_csv(temp_file_path)
+    print(f"users: {users}")
     return use_case.add_multiple_users(users)
 
 @router.get("/calc_average_age_of_user_grouped_by_first_char_of_name")

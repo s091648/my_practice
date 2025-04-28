@@ -55,6 +55,14 @@ class UserUseCase:
         if not self.repo.has_user(user):
             raise UserNotFoundError()
         self.repo.delete_user(user)
+
+    def delete_user_by_name(self, name: str) -> None:
+        """Delete a user by name.
+        
+        Args:
+            name: The name of the user to delete
+        """
+        self.repo.delete_user_by_name(name)
     
     def get_added_user(self) -> List[NewUser]:
         """Get all newly added users.

@@ -53,6 +53,15 @@ class IUserRepository(ABC):
         pass
 
     @abstractmethod
+    def delete_user_by_name(self, name: str) -> None:
+        """Delete a user by name.
+        
+        Args:
+            name: The name of the user to delete
+        """
+        pass
+
+    @abstractmethod
     def get_added_user(self) -> List[NewUser]:
         """Retrieve all newly added users from storage.
         

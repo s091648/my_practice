@@ -19,7 +19,7 @@ class Container(containers.DeclarativeContainer):
     csv_parser = providers.Singleton(CsvUserParserService)
     speech_recognizer = providers.Singleton(
         OpenAIWhisperRecognizer,
-        api_key=os.getenv("OPENAI_API_KEY")
+        openai_api_key=os.getenv("OPENAI_API_KEY")
     )
     command_operations = providers.Singleton(UserCommandOperations)
     

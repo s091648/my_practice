@@ -73,35 +73,40 @@ async def execute_command(
         data = command.get("data", {})
         
         if action == "create_user":
-            user = NewUser(name=data.get("name"), age=data.get("age"))
+            user = NewUser(Name=data.get("name"), Age=data.get("age"))
             result = user_use_case.create_user(user)
-            return {"action": "create_user", "data": result}
+            return {"action": "create_user", "command": text, "data": result}
             
         elif action == "delete_user":
-            user = User(name=data.get("name"), age=data.get("age"))
+            user = User(Name=data.get("name"), Age=data.get("age"))
             result = user_use_case.delete_user(user)
-            return {"action": "delete_user", "data": result}
+            return {"action": "delete_user", "command": text, "data": result}
+            
+        elif action == "delete_user_by_name":
+            captial_name = data.get("name").lower().capitalize()    
+            result = user_use_case.delete_user_by_name(captial_name)
+            return {"action": "delete_user_by_name", "command": text, "data": result}
             
         elif action == "get_all_users":
             all_users = user_use_case.get_all_users()
-            result = [user.model_dump() for user in all_users]
-            return {"action": "get_all_users", "data": result}
-            
+            result = [{'is_new': isinstance(user, NewUser), **user.model_dump()} for user in all_users]
+            return {"action": "get_all_users", "command": text, "data": result}
+
         elif action == "get_added_user":
             added_users = user_use_case.get_added_user()
             result = [user.model_dump() for user in added_users]
-            return {"action": "get_added_user", "data": result}
+            return {"action": "get_added_user", "command": text, "data": result}
             
         elif action == "calc_average_age":
             result = user_use_case.calc_average_age_grouped_by_first_char_of_name()
-            return {"action": "calc_average_age", "data": result}
+            return {"action": "calc_average_age", "command": text, "data": result}
             
         else:
             return JSONResponse(
                 status_code=400,
                 content={
                     "error": "無法識別的命令",
-                    "recognized_text": text
+                    "command": text,
                 }
             )
     except Exception as e:
@@ -109,6 +114,6 @@ async def execute_command(
             status_code=500,
             content={
                 "error": f"執行命令失敗: {str(e)}",
-                "recognized_text": text
+                "command": text
             }
         )

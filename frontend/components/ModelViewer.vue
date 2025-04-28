@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -21,9 +21,93 @@ const props = defineProps({
 const emit = defineEmits(['modelHover'])
 
 const canvas = ref(null)
-let scene, camera, renderer, controls, model, raycaster, mouse
+let scene, camera, renderer, controls, raycaster, mouse
 let hoveredModel = null
+let selectedModel = null
 let models = []
+const modelLoaders = {
+  normal: new GLTFLoader(),
+  premium: new GLTFLoader()
+}
+let normalModel = null
+let premiumModel = null
+
+const loadModel = async (type) => {
+  return new Promise((resolve, reject) => {
+    const loader = type === 'normal' ? modelLoaders.normal : modelLoaders.premium
+    const modelPath = type === 'normal' ? '/models/pokeball.glb' : '/models/premiumball.glb'
+    
+    loader.load(
+      modelPath,
+      (gltf) => {
+        resolve(gltf.scene)
+      },
+      undefined,
+      (error) => {
+        console.error(`Error loading ${type} model:`, error)
+        reject(error)
+      }
+    )
+  })
+}
+
+const initModels = async () => {
+  try {
+    // 預先加載兩種模型
+    normalModel = await loadModel('normal')
+    premiumModel = await loadModel('premium')
+    
+    // 初始化場景中的模型
+    updateModels()
+  } catch (error) {
+    console.error('Error initializing models:', error)
+  }
+}
+
+const updateModels = () => {
+  // 清除現有模型
+  models.forEach(model => scene.remove(model))
+  models = []
+  
+  // 創建新的模型實例
+  props.users.forEach((user, index) => {
+    const modelType = user.is_new ? 'premium' : 'normal'
+    const baseModel = modelType === 'premium' ? premiumModel : normalModel
+    const model = baseModel.clone()
+    
+    // 設置材質
+    model.traverse((node) => {
+      if (node.isMesh) {
+        if (node.material) {
+          const material = new THREE.MeshStandardMaterial()
+          if (node.material.map) material.map = node.material.map
+          if (node.material.color) material.color = node.material.color
+          material.emissive = new THREE.Color(0x000000)
+          material.emissiveIntensity = 0
+          node.material = material
+          node.material.needsUpdate = true
+        }
+      }
+    })
+    
+    // 設置位置和旋轉
+    const spacing = 3
+    const itemsPerRow = 6
+    const row = Math.floor(index / itemsPerRow)
+    const col = index % itemsPerRow
+    
+    model.position.x = (col - (itemsPerRow - 1) / 2) * spacing
+    model.position.z = row * spacing
+    model.position.y = 0
+    
+    model.rotation.x = Math.PI * 0.0
+    model.rotation.y = Math.PI * 1.0
+    model.rotation.z = Math.PI * 0.0
+    
+    scene.add(model)
+    models.push(model)
+  })
+}
 
 const init = () => {
   // 創建場景
@@ -33,10 +117,21 @@ const init = () => {
   // 創建相機
   const container = canvas.value.parentElement
   const width = container.clientWidth
-  const height = 400
-  camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
-  camera.position.z = 3 // 調整初始相機位置，更靠近模型
-  camera.position.y = 1 // 稍微提高相機高度
+  const height = container.clientHeight
+  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
+  
+  // 計算相機位置
+  const distance = 20 // 5個寶貝球的大小
+  const angleZ = 20 * (Math.PI / 180) // 與Z軸的夾角
+  const angleX = 70 * (Math.PI / 180) // 與X軸的夾角
+  
+  // 計算相機位置
+  camera.position.x = 0 // X=0平面
+  camera.position.y = distance * Math.sin(angleX) // Y座標
+  camera.position.z = distance * Math.cos(angleZ) + 10 // Z座標
+  
+  // 讓相機看向原點
+  camera.lookAt(new THREE.Vector3(0, 0, 0))
 
   // 創建渲染器
   renderer = new THREE.WebGLRenderer({ canvas: canvas.value, antialias: true })
@@ -61,6 +156,10 @@ const init = () => {
   ground.rotation.x = -Math.PI / 2
   ground.position.y = -2
   scene.add(ground)
+
+  // 添加座標軸輔助器
+  // const axesHelper = new THREE.AxesHelper(10)
+  // scene.add(axesHelper)
 
   // 添加霧效果
   scene.fog = new THREE.FogExp2(0x87CEEB, 0.002)
@@ -98,10 +197,6 @@ const init = () => {
   fillLight2.position.set(0, -5, 0)
   scene.add(fillLight2)
 
-  // 添加半球光
-  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 3)
-  scene.add(hemiLight)
-
   // 添加環境光貼圖
   const envMapLoader = new THREE.CubeTextureLoader()
   envMapLoader.setPath('/textures/')
@@ -120,74 +215,8 @@ const init = () => {
   canvas.value.addEventListener('mousemove', onMouseMove)
   canvas.value.addEventListener('mouseout', onMouseOut)
 
-  // 加載模型
-  const loader = new GLTFLoader()
-  loader.load(
-    '/models/pokeball.glb',
-    (gltf) => {
-      // 創建多個模型實例
-      for (let i = 0; i < props.users.length; i++) {
-        const model = gltf.scene.clone()
-        
-        // 遍歷所有材質並設置
-        model.traverse((node) => {
-          if (node.isMesh) {
-            if (node.material) {
-              const material = new THREE.MeshStandardMaterial()
-              if (node.material.map) material.map = node.material.map
-              if (node.material.color) material.color = node.material.color
-              material.emissive = new THREE.Color(0x000000)
-              material.emissiveIntensity = 0
-              node.material = material
-              node.material.needsUpdate = true
-            }
-          }
-        })
-        
-        // 設置位置和旋轉
-        const spacing = 3 // 寶貝球之間的間距
-        const itemsPerRow = 6 // 每排的數量
-        
-        // 計算行和列
-        const row = Math.floor(i / itemsPerRow)
-        const col = i % itemsPerRow
-        
-        // 計算位置
-        model.position.x = (col - (itemsPerRow - 1) / 2) * spacing
-        model.position.z = row * spacing // 改為正數，讓新行向上排列
-        model.position.y = 0
-        
-        model.rotation.x = Math.PI * 0.0
-        model.rotation.y = Math.PI * 1.0
-        model.rotation.z = Math.PI * 0.0
-        
-        scene.add(model)
-        models.push(model)
-      }
-      
-      // 自動調整相機位置以適應所有模型
-      const box = new THREE.Box3()
-      scene.traverse((object) => {
-        if (object.isMesh) {
-          box.expandByObject(object)
-        }
-      })
-      const center = box.getCenter(new THREE.Vector3())
-      const size = box.getSize(new THREE.Vector3())
-      const maxDim = Math.max(size.x, size.y, size.z)
-      const fov = camera.fov * (Math.PI / 180)
-      let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2))
-      camera.position.z = cameraZ * 1.5 // 調整為更近的距離
-      camera.position.x = -0.8 // 調整水平位置
-      camera.position.y = 0.6 // 調整垂直位置
-      camera.lookAt(center)
-      controls.target.copy(center)
-    },
-    undefined,
-    (error) => {
-      console.error('Error loading model:', error)
-    }
-  )
+  // 初始化模型
+  initModels()
 
   // 動畫循環
   const animate = () => {
@@ -210,8 +239,8 @@ const handleResize = () => {
   }
 }
 
-// 滑鼠移動事件處理
-const onMouseMove = (event) => {
+// 滑鼠點擊事件處理
+const onMouseClick = (event) => {
   // 計算滑鼠在畫布上的相對位置
   const rect = canvas.value.getBoundingClientRect()
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
@@ -227,9 +256,65 @@ const onMouseMove = (event) => {
     // 找到被點擊的模型
     const clickedModel = intersects[0].object.parent
 
-    if (hoveredModel !== clickedModel) {
+    // 如果點擊的是已選中的模型，則取消選中
+    if (selectedModel === clickedModel) {
+      selectedModel.traverse((node) => {
+        if (node.isMesh) {
+          node.material.emissive.setHex(0x000000)
+        }
+      })
+      selectedModel = null
+    } else {
+      // 移除舊選中模型的發光效果
+      if (selectedModel) {
+        selectedModel.traverse((node) => {
+          if (node.isMesh) {
+            node.material.emissive.setHex(0x000000)
+          }
+        })
+      }
+
+      // 添加新選中模型的發光效果
+      selectedModel = clickedModel
+      selectedModel.traverse((node) => {
+        if (node.isMesh) {
+          node.material.emissive.setHex(0xffff00)
+          node.material.emissiveIntensity = 0.5
+        }
+      })
+    }
+
+    // 發送事件通知父組件
+    const modelIndex = models.indexOf(selectedModel)
+    if (modelIndex !== -1) {
+      emit('modelHover', props.users[modelIndex])
+    } else {
+      emit('modelHover', null)
+    }
+  }
+}
+
+// 滑鼠移動事件處理
+const onMouseMove = (event) => {
+  // 計算滑鼠在畫布上的相對位置
+  const rect = canvas.value.getBoundingClientRect()
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+
+  // 更新光線投射器
+  raycaster.setFromCamera(mouse, camera)
+
+  // 檢查是否與任何模型相交
+  const intersects = raycaster.intersectObjects(models, true)
+
+  if (intersects.length > 0) {
+    // 找到被懸停的模型
+    const hovered = intersects[0].object.parent
+
+    // 如果當前懸停的模型不是之前懸停的模型，且不是已選中的模型
+    if (hoveredModel !== hovered && hovered !== selectedModel) {
       // 移除舊模型的發光效果
-      if (hoveredModel) {
+      if (hoveredModel && hoveredModel !== selectedModel) {
         hoveredModel.traverse((node) => {
           if (node.isMesh) {
             node.material.emissive.setHex(0x000000)
@@ -238,29 +323,22 @@ const onMouseMove = (event) => {
       }
 
       // 添加新模型的發光效果
-      hoveredModel = clickedModel
+      hoveredModel = hovered
       hoveredModel.traverse((node) => {
         if (node.isMesh) {
           node.material.emissive.setHex(0xffffff)
           node.material.emissiveIntensity = 0.5
         }
       })
-
-      // 發送事件通知父組件
-      const modelIndex = models.indexOf(hoveredModel)
-      if (modelIndex !== -1) {
-        emit('modelHover', props.users[modelIndex])
-      }
     }
-  } else if (hoveredModel) {
-    // 如果滑鼠沒有懸停在任何模型上，移除發光效果
+  } else if (hoveredModel && hoveredModel !== selectedModel) {
+    // 如果滑鼠沒有懸停在任何模型上，且當前懸停的模型不是已選中的模型
     hoveredModel.traverse((node) => {
       if (node.isMesh) {
         node.material.emissive.setHex(0x000000)
       }
     })
     hoveredModel = null
-    emit('modelHover', null)
   }
 }
 
@@ -277,9 +355,17 @@ const onMouseOut = () => {
   }
 }
 
+// 監聽 users 的變化
+watch(() => props.users, () => {
+  if (normalModel && premiumModel) {
+    updateModels()
+  }
+}, { deep: true })
+
 onMounted(() => {
   init()
   window.addEventListener('resize', handleResize)
+  canvas.value.addEventListener('click', onMouseClick)
 })
 
 onBeforeUnmount(() => {
@@ -291,6 +377,7 @@ onBeforeUnmount(() => {
   if (canvas.value) {
     canvas.value.removeEventListener('mousemove', onMouseMove)
     canvas.value.removeEventListener('mouseout', onMouseOut)
+    canvas.value.removeEventListener('click', onMouseClick)
   }
 })
 </script>
