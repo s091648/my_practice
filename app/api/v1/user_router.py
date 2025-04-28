@@ -1,16 +1,15 @@
 from fastapi import APIRouter, UploadFile, File, Depends
 from app.use_cases.user.user_use_case import UserUseCase
-from app.infrastructure.repositories.user_repository_csv import UserCSVRepository
 from app.domain.user import NewUser, User
-from app.infrastructure.services.csv_user_parser import CsvUserParserService
-from app.di.use_case_factory import UseCaseFactory
+from app.di.container import container
+from app.core.settings import settings
 
 # 設定路由前綴為 /api/v1
 router = APIRouter(prefix="/api/v1", tags=["users"])
 
 def get_user_use_case() -> UserUseCase:
     """依賴項函數，提供 UserUseCase 實例"""
-    return UseCaseFactory.create_user_use_case()
+    return container.user_use_case()
 
 @router.post("/create_user")
 def create_user(user: NewUser, use_case: UserUseCase = Depends(get_user_use_case)):

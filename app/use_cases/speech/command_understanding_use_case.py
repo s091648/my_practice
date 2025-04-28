@@ -3,11 +3,13 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 from app.interfaces.command_understanding import ICommandUnderstanding
+from app.interfaces.command_operations import ICommandOperations
 
 class CommandUnderstandingUseCase(ICommandUnderstanding):
-    def __init__(self, openai_api_key: str):
+    def __init__(self, openai_api_key: str, command_operations: ICommandOperations):
         load_dotenv()
         self.client = OpenAI(api_key=openai_api_key)
+        self.command_operations = command_operations
 
     def understand(self, text: str) -> Dict[str, Any]:
         """理解並解析語音命令
@@ -23,23 +25,7 @@ class CommandUnderstandingUseCase(ICommandUnderstanding):
             messages=[
                 {
                     "role": "system", 
-                    "content": """你是一個命令解析器，將用戶的語音命令轉換為具體的操作。
-                    可用的操作包括：
-                    1. 創建用戶 (create_user) - 需要提供 name 和 age
-                    2. 刪除用戶 (delete_user) - 需要提供 name 和 age
-                    3. 獲取所有用戶 (get_all_users)
-                    4. 獲取已添加的用戶 (get_added_user)
-                    5. 計算用戶名稱首字母的平均年齡 (calc_average_age)
-                    
-                    請返回 JSON 格式，例如：
-                    {
-                        "action": "create_user",
-                        "data": {
-                            "name": "John",
-                            "age": 25
-                        }
-                    }
-                    """
+                    "content": self.command_operations.get_system_prompt()
                 },
                 {"role": "user", "content": f"請解析以下命令並返回 JSON 格式的操作指令：{text}"}
             ]

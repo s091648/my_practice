@@ -1,7 +1,7 @@
 from openai import OpenAI
-from app.domain.speech.speech_recognizer import SpeechRecognizer
+from app.interfaces.speech_recognizer import ISpeechRecognizer
 
-class OpenAIWhisperRecognizer(SpeechRecognizer):
+class OpenAIWhisperRecognizer(ISpeechRecognizer):
     def __init__(self, openai_api_key: str):
         self.client = OpenAI(api_key=openai_api_key)
 

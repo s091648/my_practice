@@ -1,29 +1,33 @@
 from fastapi import APIRouter, UploadFile, File, Form, Depends
 from fastapi.responses import JSONResponse
 import os
-from typing import Dict, Any
 from app.use_cases.speech.recognize_speech_use_case import RecognizeSpeechUseCase
-from app.use_cases.speech.command_understanding_use_case import CommandUnderstandingUseCase
 from app.use_cases.user.user_use_case import UserUseCase
 from app.domain.user import NewUser, User
-from app.di.use_case_factory import UseCaseFactory
+from app.di.container import container
 from app.interfaces.command_understanding import ICommandUnderstanding
-from app.interfaces.speech_recognizer import ISpeechRecognizer
+from app.interfaces.command_operations import ICommandOperations
 
 # 設定路由前綴為 /api/v1
 router = APIRouter(prefix="/api/v1", tags=["voice"])
 
 def get_transcribe_use_case() -> RecognizeSpeechUseCase:
     """依賴項函數，提供 TranscribeUseCase 實例"""
-    return UseCaseFactory.create_transcribe_use_case()
+    return container.transcribe_use_case()
 
-def get_command_understanding_use_case() -> ICommandUnderstanding:
+def get_command_operations() -> ICommandOperations:
+    """依賴項函數，提供 ICommandOperations 實例"""
+    return container.command_operations()
+
+def get_command_understanding_use_case(
+    command_operations: ICommandOperations = Depends(get_command_operations)
+) -> ICommandUnderstanding:
     """依賴項函數，提供 CommandUnderstandingUseCase 實例"""
-    return UseCaseFactory.create_command_understanding_use_case()
+    return container.command_understanding_use_case()
 
 def get_user_use_case() -> UserUseCase:
     """依賴項函數，提供 UserUseCase 實例"""
-    return UseCaseFactory.create_user_use_case()
+    return container.user_use_case()
 
 @router.post("/transcribe")
 async def transcribe_audio(
@@ -107,4 +111,4 @@ async def execute_command(
                 "error": f"執行命令失敗: {str(e)}",
                 "recognized_text": text
             }
-        ) 
+        )
