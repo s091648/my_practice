@@ -58,11 +58,14 @@ async def transcribe_audio(
 @router.post("/execute_command")
 async def execute_command(
     text: str = Form(...),
+    selectedName: str = Form(None),
+    selectedAge: str = Form(None),
     command_understanding_use_case: ICommandUnderstanding = Depends(get_command_understanding_use_case),
     user_use_case: UserUseCase = Depends(get_user_use_case)
 ):
     try:
         print(f"接收到的命令: {text}")
+        print(f"接收到的參數: {selectedName}, {selectedAge}")
         
         # 使用命令理解用例
         command = command_understanding_use_case.understand(text)
@@ -78,7 +81,7 @@ async def execute_command(
             return {"action": "create_user", "command": text, "data": result}
             
         elif action == "delete_user":
-            user = User(Name=data.get("name"), Age=data.get("age"))
+            user = User(Name=selectedName, Age=selectedAge)
             result = user_use_case.delete_user(user)
             return {"action": "delete_user", "command": text, "data": result}
             

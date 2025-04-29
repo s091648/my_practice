@@ -40,7 +40,6 @@ def add_multiple_users_from_csv(
     with open(temp_file_path, "wb") as f:
         f.write(file.file.read())
     users = use_case.load_users_from_csv(temp_file_path)
-    print(f"users: {users}")
     return use_case.add_multiple_users(users)
 
 @router.get("/calc_average_age_of_user_grouped_by_first_char_of_name")

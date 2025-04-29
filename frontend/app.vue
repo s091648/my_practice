@@ -26,9 +26,11 @@
             </div>
             <UButton
               :icon="isRecording ? 'i-heroicons-stop' : 'i-heroicons-microphone'"
-              :color="isRecording ? 'red' : 'primary'"
+              :color="isRecording ? 'bg-red-500' : 'primary'"
               @click="toggleRecording"
               :disabled="isLoading"
+              class="cursor-pointer"
+              :class="{ 'bg-red-500': isRecording }"
             >
               {{ isRecording ? '停止錄音' : '開始錄音' }}
             </UButton>
@@ -38,18 +40,29 @@
       
       <div v-if="users.length > 0" class="grid grid-cols-12 gap-4">
         <div class="col-span-9">
-          <ModelViewer :users="users" @modelHover="handleModelHover" />
+          <ModelViewer :users="users" @modelSelected="handleModelSelected" />
         </div>
         <div class="col-span-3">
-          <UCard v-if="hoveredUser" class="sticky top-4">
+          <UCard v-if="selectedUser" class="sticky top-4">
             <template #header>
               <h3 class="text-lg font-semibold">用戶詳情</h3>
             </template>
             <UTable
-              :data="[hoveredUser]"
+              :data="[selectedUser]"
               :columns="detailColumns"
               class="w-full"
             />
+            <div class="flex justify-end mt-4 cursor-pointer">
+              <UButton
+                variant="solid"
+                @click="handleDeleteSelectedUser"
+                :loading="isLoading"
+                class="cursor-pointer bg-red-500"
+                icon="i-heroicons-trash"
+              >
+                刪除選定用戶
+              </UButton>
+            </div>
           </UCard>
         </div>
       </div>
@@ -99,7 +112,7 @@ const users = ref([])
 const isRecording = ref(false)
 const mediaRecorder = ref(null)
 const audioChunks = ref([])
-const hoveredUser = ref(null)
+const selectedUser = ref(null)
 const isLoading = ref(false)
 
 const columns = [
@@ -179,6 +192,7 @@ const transcribeAudio = async (audioBlob) => {
     }
 
     const { text } = await response.json()
+    responseCommand.value = text
     await executeCommand(text)
   } catch (error) {
     console.error('Error transcribing audio:', error)
@@ -190,6 +204,10 @@ const executeCommand = async (text) => {
     isLoading.value = true
     const formData = new FormData()
     formData.append('text', text)
+    if (selectedUser.value) {
+      formData.append('selectedName', selectedUser.value.name)
+      formData.append('selectedAge', selectedUser.value.age)
+    }
 
     const response = await fetch('/api/v1/execute_command', {
       method: 'POST',
@@ -197,7 +215,6 @@ const executeCommand = async (text) => {
     })
 
     const result = await response.json()
-    console.log('result:', result)
     
     if (!response.ok) {
       // 處理錯誤情況
@@ -210,31 +227,23 @@ const executeCommand = async (text) => {
     switch (result.action) {
       case 'get_all_users':
         commandName.value = '顯示所有用戶'
-        responseCommand.value = result.command
-        users.value = result.data.map((user, index) => ({
-          id: index + 1,
-          name: user.Name || user.name || '',
-          age: user.Age || user.age || '',
-          is_new: user.is_new
-        }))
+        await fetchUsers()
         break
       case 'get_added_user':
         commandName.value = '顯示已添加的用戶'
-        console.log('已添加的用戶:', result.data)
+        await fetchUsers()
         break
       case 'create_user':
         commandName.value = '創建用戶'
-        responseCommand.value = result.command
         await fetchUsers()
         break
       case 'delete_user':
         commandName.value = '刪除用戶'
-        console.log('用戶已刪除:', result.data)
+        selectedUser.value = null
         await fetchUsers()
         break
       case 'delete_user_by_name':
         commandName.value = '刪除用戶'
-        console.log('用戶已刪除:', result.data)
         await fetchUsers()
         break
       case 'calc_average_age':
@@ -270,8 +279,8 @@ const fetchUsers = async () => {
   }
 }
 
-const handleModelHover = (user) => {
-  hoveredUser.value = user
+const handleModelSelected = (user) => {
+  selectedUser.value = user
 }
 
 const handleFileUpload = async (event) => {
@@ -306,6 +315,35 @@ const handleFileUpload = async (event) => {
     isLoading.value = false
     // 清空檔案輸入
     event.target.value = ''
+  }
+}
+
+const handleDeleteSelectedUser = async () => {
+  if (!selectedUser.value) return
+  
+  try {
+    isLoading.value = true
+    const formData = new FormData()
+    formData.append('selectedName', selectedUser.value.name)
+    formData.append('selectedAge', selectedUser.value.age)
+
+    const response = await fetch('/api/v1/delete_user', {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      throw new Error('刪除用戶失敗')
+    }
+
+    commandName.value = '刪除用戶'
+    selectedUser.value = null
+    await fetchUsers()
+  } catch (error) {
+    console.error('Error deleting user:', error)
+    commandName.value = `錯誤: ${error.message}`
+  } finally {
+    isLoading.value = false
   }
 }
 </script>

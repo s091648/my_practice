@@ -10,12 +10,12 @@ class UserCommandOperations(ICommandOperations):
             ),
             CommandOperation(
                 name="delete_user",
-                description="刪除用戶",
-                required_fields=["name", "age"]
+                description="刪除選定的用戶",
+                required_fields=["selectedName", "selectedAge"]
             ),
             CommandOperation(
                 name="delete_user_by_name",
-                description="僅透過用戶名稱刪除用戶",
+                description="當指定名稱時，透過用戶名稱刪除用戶",
                 required_fields=["name"]
             ),
             CommandOperation(

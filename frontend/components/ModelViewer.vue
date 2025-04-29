@@ -18,7 +18,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['modelHover'])
+const emit = defineEmits(['modelSelected'])
 
 const canvas = ref(null)
 let scene, camera, renderer, controls, raycaster, mouse
@@ -213,7 +213,7 @@ const init = () => {
 
   // 添加滑鼠移動事件監聽器
   canvas.value.addEventListener('mousemove', onMouseMove)
-  canvas.value.addEventListener('mouseout', onMouseOut)
+  // canvas.value.addEventListener('mouseout', onMouseOut)
 
   // 初始化模型
   initModels()
@@ -287,9 +287,9 @@ const onMouseClick = (event) => {
     // 發送事件通知父組件
     const modelIndex = models.indexOf(selectedModel)
     if (modelIndex !== -1) {
-      emit('modelHover', props.users[modelIndex])
+      emit('modelSelected', props.users[modelIndex])
     } else {
-      emit('modelHover', null)
+      emit('modelSelected', null)
     }
   }
 }
@@ -351,7 +351,7 @@ const onMouseOut = () => {
       }
     })
     hoveredModel = null
-    emit('modelHover', null)
+    emit('modelSelected', null)
   }
 }
 
@@ -376,7 +376,7 @@ onBeforeUnmount(() => {
   // 移除事件監聽器
   if (canvas.value) {
     canvas.value.removeEventListener('mousemove', onMouseMove)
-    canvas.value.removeEventListener('mouseout', onMouseOut)
+    // canvas.value.removeEventListener('mouseout', onMouseOut)
     canvas.value.removeEventListener('click', onMouseClick)
   }
 })
